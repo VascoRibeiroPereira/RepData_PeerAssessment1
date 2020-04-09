@@ -7,7 +7,8 @@ output:
 
 ## Loading and preprocessing the data  
 The code for unzip and load the data is described below, such as all the needed libraries.  
-```{r load Data, message=FALSE}
+
+```r
 library(ggplot2)
 library(dplyr)
 library(ggpmisc)
@@ -18,16 +19,27 @@ df <- read.csv("activity.csv", sep = ",", na.strings = "NA")
 ```
 
 It's interesting to understand how the data is presented, so I show here a summary table.  
-```{r summary of the data, echo = FALSE}
-sT <- knitr::kable(summary(df))
-print(sT, type = "html")
+
+```
+## 
+## 
+##          steps                date          interval    
+## ---  ---------------  -----------------  ---------------
+##      Min.   :  0.00   2012-10-01:  288   Min.   :   0.0 
+##      1st Qu.:  0.00   2012-10-02:  288   1st Qu.: 588.8 
+##      Median :  0.00   2012-10-03:  288   Median :1177.5 
+##      Mean   : 37.38   2012-10-04:  288   Mean   :1177.5 
+##      3rd Qu.: 12.00   2012-10-05:  288   3rd Qu.:1766.2 
+##      Max.   :806.00   2012-10-06:  288   Max.   :2355.0 
+##      NA's   :2304     (Other)   :15840   NA
 ```
 
 There is a 2304 *NA* in steps (and a lot of 0 number of steps... maybe an office worker?) 
 
 ## What is mean total number of steps taken per day?  
 Code for the histogram of the total number of steps taken each day, done with the original data frame purged from *NA* values.  
-```{r histogram histogram}
+
+```r
 dfC <- df[complete.cases(df),] ## subset of the df complete cases
 dfCsteps <- aggregate(steps ~ date, dfC, sum)
 
@@ -38,20 +50,16 @@ ggptotalSteps <- ggplot(dfCsteps, (aes(steps))) +
 
 ggptotalSteps
 ```
+
+![](PA1_template_files/figure-html/histogram histogram-1.png)<!-- -->
   
-```{r mean and median, echo = FALSE}
 
-## Mean total steps/day
-meanTotalSteps <- as.integer(mean(dfCsteps$steps))
-
-## Median total steps/day
-medianTotalSteps <- median(dfCsteps$steps)
-```
-The mean total number of steps taken per day is `r meanTotalSteps` and the median is `r medianTotalSteps`.  
+The mean total number of steps taken per day is 10766 and the median is 10765.  
 
 ## What is the average daily activity pattern?  
 The next code creates a time series plot of the activity pattern (in average). The max number of steps is indicated on the plot.  
-```{r }
+
+```r
 dfCstpitv <- aggregate(steps ~ interval, dfC, mean)
 
 ggpmeanSteps <- ggplot(dfCstpitv, (aes(interval, steps))) + 
@@ -65,25 +73,28 @@ ggpmeanSteps <- ggplot(dfCstpitv, (aes(interval, steps))) +
 
 ggpmeanSteps
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
   
 In this table I make more explicit the 5 minute interval in which we have the max step count in average across all days.  
-```{r Max steps, echo=FALSE}
-MaxStpItrvl <- knitr::kable(filter(dfCstpitv, steps == max(dfCstpitv$steps))) ## as shown in the graph
-print(MaxStpItrvl, type = "html")
+
+```
+## 
+## 
+##  interval      steps
+## ---------  ---------
+##       835   206.1698
 ```
 
 ## Imputing missing values  
 
-```{r Analyse NA data, echo=FALSE}
-colsNA <- names(df)[grepl("NA", df)] ## only the first column "steps" have NA values
-rowsNA <- sum(is.na(df$steps)) ## sum of all is.na = TRUE
-NAweight <- paste(as.integer(mean(is.na(df$steps))*100), "%", sep = "") ## % of NA
-```
-In the original data we have `r colsNA` column with *NA* values, showned also in the summary. There is `r rowsNA` missing values (representing the same number of rows in this case), which represents `r NAweight` of the total data.  
+
+In the original data we have steps column with *NA* values, showned also in the summary. There is 2304 missing values (representing the same number of rows in this case), which represents 13% of the total data.  
 
 For imputing missing data into this *NA* values I considered simply adding the average number of steps per interval corresponding to the mean number of steps per interval of the weekday (or weekend) it corresponds to, with a **for loop** and **if** statement...
 
-```{r }
+
+```r
 newDF <- df # create a copy of the original df to complete 
 
 ## mean number of steps per day (Sunday to Saturday)
@@ -92,12 +103,24 @@ names(stpsbyWday) <- c("day", "steps")
 ```
 
 The table created named *stpsbyWday* have the mean steps per day that will be the source of the missing data inputed in the *newDF* soon to be completed with the next code.
-```{r ,echo=FALSE}
-print(knitr::kable(stpsbyWday), type = "html")
+
+```
+## 
+## 
+## day             steps
+## ----------  ---------
+## Friday       42.91567
+## Monday       34.63492
+## Saturday     43.52579
+## Sunday       42.63095
+## Thursday     28.51649
+## Tuesday      31.07485
+## Wednesday    40.94010
 ```
 
 
-```{r }
+
+```r
 newDF$date <- as.Date(newDF$date) ## remove the factor
 ## Adding the calculated average to the mising values
 for (i in 1:length(newDF[,1])) {
@@ -108,28 +131,14 @@ for (i in 1:length(newDF[,1])) {
 }
 ```
 
-```{r ,echo=FALSE}
-dfsteps.newDF <- aggregate(steps ~ date, newDF, sum)
 
-## Mean total steps/day newDF
-meanTotalStepsNEW.DF <- as.integer(mean(dfsteps.newDF$steps))
-#10821.21
-
-## Median total steps/day newDF
-medianTotalStepsNEW.DF <- as.integer(median(dfsteps.newDF$steps))
-#11015
-
-
-## Difference proportion to the original data
-meanSimilarity.new <- paste(round(meanTotalSteps*100/meanTotalStepsNEW.DF, 2), "%", sep = "")
-medianSimilarity.new <- paste(round(medianTotalSteps*100/medianTotalStepsNEW.DF, 2), "%", sep = "")
-```
 Using the day average may be a good decision because it takes into account some sort of routine associated with weekday/weekend.  
-So, in the complete data we obtained a mean total of `r meanTotalStepsNEW.DF` steps and a median of `r medianTotalStepsNEW.DF` steps, corresponding to a difference of `r meanSimilarity.new` and `r medianSimilarity.new` respectivly.  
+So, in the complete data we obtained a mean total of 10821 steps and a median of 11015 steps, corresponding to a difference of 99.49% and 97.73% respectivly.  
 
 The impact of the input seems small and I've continued with the analysis by making the histogram of total number of steps taken each day (similar to the first one, but now with the complete data).  
 
-```{r }
+
+```r
 ggptdfsteps.newDF <- ggplot(dfsteps.newDF, (aes(steps))) + 
         geom_histogram(binwidth = 4000, col = "cadetblue", fill = "aquamarine") +
         labs(x = "Steps", y = "Frequency", title = "Total number of steps taken each day") +
@@ -137,9 +146,12 @@ ggptdfsteps.newDF <- ggplot(dfsteps.newDF, (aes(steps))) +
 ggptdfsteps.newDF
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 ## Are there differences in activity patterns between weekdays and weekends?  
 I've add another col to the dataset based on the **for loop** and **ifelse** statements checking if the day of the measurement was inside the vector "weekday" or not.  
-```{r }
+
+```r
 weekday <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
 
 newDF <- mutate(newDF, day = weekdays(as.Date(newDF$date)))
@@ -154,7 +166,8 @@ for (i in 1:length(newDF$day)) {
 ```
 
 To generate the time series panel plot with the average number of steps in the 5 minute interval and checking the pattern between weekdays and weekends I have aggregated as showned with the function mean applied to the steps, and ploted.  
-```{r }
+
+```r
 newDF_Days <- aggregate(steps ~ interval+day, newDF, mean)
 
 ggp.newDF_Days <- ggplot(newDF_Days, (aes(interval, steps))) + 
@@ -162,5 +175,7 @@ ggp.newDF_Days <- ggplot(newDF_Days, (aes(interval, steps))) +
         labs(y = "Number of steps", x = "Interval")
 ggp.newDF_Days
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 There is an evident difference in patterns from weekend to weekdays.  
