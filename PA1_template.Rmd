@@ -27,7 +27,7 @@ There is a 2304 *NA* in steps (and a lot of 0 number of steps... maybe an office
 
 ## What is mean total number of steps taken per day?  
 Code for the histogram of the total number of steps taken each day, done with the original data frame purged from *NA* values.  
-```{r histogram histogram}
+```{r histogram}
 dfC <- df[complete.cases(df),] ## subset of the df complete cases
 dfCsteps <- aggregate(steps ~ date, dfC, sum)
 

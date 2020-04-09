@@ -51,7 +51,7 @@ ggptotalSteps <- ggplot(dfCsteps, (aes(steps))) +
 ggptotalSteps
 ```
 
-![](PA1_template_files/figure-html/histogram histogram-1.png)<!-- -->
+![](PA1_template_files/figure-html/histogram-1.png)<!-- -->
   
 
 The mean total number of steps taken per day is 10766 and the median is 10765.  
